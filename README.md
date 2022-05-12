@@ -1,0 +1,7 @@
+# Alternative TTCN-3 specifications (Experimental)
+
+This repository provides machine-readable specifications for TTCN-3. Its
+purpose to help with tool creation and streamlining.
+
+The files provides in this repository are experimental and not official part of
+TTCN-3 standard. But we try to keep it as close as possible.

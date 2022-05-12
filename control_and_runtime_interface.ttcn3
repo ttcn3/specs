@@ -1,0 +1,274 @@
+module Codec {
+	group Required {
+		signature TypeForName(charstring name) return Type;
+		signature Integer() return Type;
+		signature Float() return Type;
+		signature Boolean() return Type;
+		signature Char() return Type;
+		signature UniversalChar() return Type;
+		signature Charstring() return Type;
+		signature UniversalCharstring() return Type;
+		signature Hexstring() return Type;
+		signature Bitstring() return Type;
+		signature Octetstring() return Type;
+		signature Verdict() return Type;
+		signature ErrorReq(charstring msg);
+	}
+
+	group Provided {
+		signature Decode(Message msg, Type typ) return Value;
+		signature Encode(Value val) return Message;
+	}
+}
+
+module TestManager {
+	group Required {
+		signature RootModule(charstring name);
+		signature ImportedModules() return Charstrings;
+		signature ModuleParameters(charstring name) return ModuleParameters;
+		signature TestCases() return Charstrings;
+		signature TestCaseParameters(charstring name) return ParameterTypes;
+		signature TestCaseTSI(charstring name) return PortIds;
+		signature StartTestCase(charstring name, Parameters params);
+		signature StopTestCase();
+		signature StartControl() return ComponentId;
+		signature StopControl();
+		signature ControlParameters() return ParameterTypes;
+		signature StartControlWithParameters(Parameters params) return ComponentId;
+	}
+
+
+	group Provided {
+		signature TestCaseStarted(charstring name, Parameters params, float timeout);
+		signature TestCaseTerminated(VerdictValue v, Parameters params);
+		signature ControlTerminated();
+		signature ModulePar(charstring name) return Value;
+		signature Log(ComponentId id, charstring msg);
+		signature Error(charstring msg);
+		signature ControlTerminatedWithResult(Value res, Parameters params);
+	}
+
+}
+
+module ComponentHandler {
+	group Required {
+		signature EnqueueMsgConnected(PortId src, ComponentId dest, Value msg);
+		signature EnqueueCallConnected(PortId src, ComponentId dest, charstring name, Parameters params);
+		signature EnqueueReplyConnected(PortId src, ComponentId dest, charstring name, Parameters params, Value ret);
+		signature EnqueueRaiseConnected(PortId src, ComponentId dest, charstring name, Value val);
+		signature CreateTestComponent(TestComponentKind kind, Type typ, charstring name) return ComponentId;
+		signature StartTestComponent(ComponentId id, charstring behavior, Parameters params);
+		signature StopTestComponent(ComponentId id);
+		signature Connect(PortId a, PortId b);
+		signature Disconnect(PortId a, PortId b);
+		signature TestComponentTerminated(ComponentId id, VerdictValue v);
+		signature TestComponentRunning(ComponentId id) return boolean;
+		signature MTC() return ComponentId;
+		signature Map(PortId a, PortId b);
+		signature Unmap(PortId a, PortId b);
+		signature ExecuteTestCase(charstring name, PortIds tsiPorts);
+		signature TestComponentDone(ComponentId id) return boolean;
+		signature Reset();
+	}
+
+	group Provided {
+		signature SendConnected(PortId src, ComponentId dest, Value msg);
+		signature SendConnectedBC(PortId src, Value msg);
+		signature SendConnectedMC(PortId src, ComponentIds dests, Value msg);
+
+		signature CallConnected(PortId src, ComponentId dest, charstring name, Parameters params);
+		signature CallConnectedBC(PortId src, charstring name, Parameters params);
+		signature CallConnectedMC(PortId src, ComponentIds dests, charstring name, Parameters params);
+
+		signature ReplyConnected(PortId src, ComponentId dest, charstring name, Parameters params, Value ret);
+		signature ReplyConnectedBC(PortId src, charstring name, Parameters params, Value ret);
+		signature ReplyConnectedMC(PortId src, ComponentIds dests, charstring name, Parameters params, Value ret);
+
+		signature RaiseConnected(PortId src, ComponentId dest, charstring name, Value val);
+		signature RaiseConnectedBC(PortId src, charstring name, Value val);
+		signature RaiseConnectedMC(PortId src, ComponentIds dests, charstring name, Value val);
+
+		signature CreateTestComponentReq(TestComponentKind kind, Type component, charstring name, Value id) return ComponentId;
+		signature StartTestComponentReq(ComponentId comp, charstring behavior, Parameters params);
+		signature StopTestComponentReq(ComponentId comp);
+		signature ConnectReq(PortId fromPort, PortId toPort);
+		signature DisconnectReq(PortId fromPort, PortId toPort);
+		signature TestComponentTerminatedReq(ComponentId comp, VerdictValue verdict);
+		signature TestComponentRunningReq(ComponentId comp) return boolean;
+		signature MTCReq() return ComponentId;
+		signature MapReq(PortId fromPort, PortId toPort);
+		signature UnmapReq(PortId fromPort, PortId toPort);
+		signature ExecuteTestCaseReq(charstring name, PortIds tsiPorts);
+		signature ResetReq();
+		signature TestComponentDoneReq(ComponentId comp) return boolean;
+	}
+}
+
+module SystemAdapter {
+	signature Reset() return Status;
+
+	signature ActionInformal(string description) return Status;
+	signature ActionParam(Parameters params) return Status;
+
+	signature ErrorReq(string msg);
+
+	// Connection handling operations
+	signature ExecuteTestCase(charstring name, PortIds tsiPorts) return Status;
+	signature Map(PortId comp, PortId tsi) return Status;
+	signature MapParam(PortId comp, PortId tsi, Parameters params) return Status;
+	signature Unmap(PortId comp, PortId tsi) return Status;
+	signature UnmapParam(PortId comp, PortId tsi, Parameters params) return Status;
+	signature EndTestCase() return Status;
+
+	group MessageBasedCommunication {
+
+		signature Send(ComponentId comp, PortId tsi, Address SUTaddress, Message sendMessage) return Status;
+		signature SendBC(ComponentId comp, PortId tsi, Message sendMessage) return Status;
+		signature SendMC(ComponentId comp, PortId tsi, Addresss SUTaddresses, Message sendMessage) return Status;
+
+		signature EnqueueMsg(PortId tsi, Address SUTaddress, ComponentId comp, Message receivedMessage);
+	}
+
+	group ProcedureBasedCommunication {
+
+		signature Call(ComponentId comp, PortId tsi, Address SUTaddress, charstring name, Parameters params) return Status;
+		signature CallBC(ComponentId comp, PortId tsi, charstring name, Parameters params) return Status;
+		signature CallMC(ComponentId comp, PortId tsi, Addresss SUTaddresses, charstring name, Parameters params) return Status;
+
+		signature Reply(ComponentId comp, PortId tsi, Address SUTaddress, charstring name, Parameters params, Parameter returnValue) return Status;
+		signature ReplyBC(ComponentId comp, PortId tsi, charstring name, Parameters params, Parameter returnValue) return Status;
+		signature ReplyMC(ComponentId comp, PortId tsi, Addresss SUTaddresses, charstring name, Parameters params, Parameter returnValue) return Status;
+
+		signature Raise(ComponentId comp, PortId tsi, Address SUTaddress, charstring name, Exception exc) return Status;
+		signature RaiseBC(ComponentId comp, PortId tsi, charstring name, Exception exc) return Status;
+		signature RaiseMC(ComponentId comp, PortId tsi, Addresss SUTaddresses, charstring name, Exception exc) return Status;
+
+		signature EnqueueCall(PortId tsi, Address SUTaddress, ComponentId comp, charstring name, Parameters params);
+		signature EnqueueReply(PortId tsi, Address SUTaddress, ComponentId comp, charstring name, Parameters params, Parameter returnValue);
+		signature EnqueueException(PortId tsi, Address SUTaddress, ComponentId comp, charstring name, Exception exc);
+	}
+}
+
+module PlatformAdapter {
+
+	signature Reset() return Status;
+
+	signature StartTimer(imerId id, TimerDuration timerDuration) return Status;
+	signature StopTimer(TimerId id) return Status;
+	signature ReadTimer(TimerId id, out TimerDuration elapsedTime) return Status;
+	signature TimerRunning(TimerId id, out boolean running) return Status;
+	signature Timeout(TimerId id);
+
+	signature ExternalFunction(FunctionId id, inout Parameters params, out Parameter returnValue) return Status;
+
+	signature Self() return ComponentId;
+
+	signature Rnd(ComponentId id, Message seed) return Message;
+
+	signature ErrorReq(string msg);
+}
+
+module Types {
+	type native Address;
+	type native ComponentId;
+	type native Exception;
+	type native FunctionId;
+	type native Message;
+	type native PortId;
+	type native Status;
+	type native TimerDuration;
+	type native TimerId;
+
+	type record of Address Addresss;
+	type record of ComponentId ComponentIds;
+	type record of Parameter Parameters;
+	type record of PortId PortIds;
+
+	type charstring charstring
+
+	type enumerated ParameterPassingMode {
+		IN_MODE,
+		OUT_MODE,
+		INOUT_MODE
+	}
+
+	type record Parameter {
+		charstring name,
+		Value Value,
+		ParameterPassingMode Mode
+	}
+
+	type record of Parameter Parameters;
+
+	type record ParameterType {
+		Type parameter,
+		ParameterPassingMode mode
+	}
+
+	type record of ParameterType ParameterTypes;
+
+	type record ModuleParameter {
+		charstring parameterName,
+		Value defaultValue
+	}
+
+
+	type record of ModuleParameter ModuleParameters;
+
+	type record of charstring Charstrings;
+
+
+	type enumerated TestComponentKind {
+		CONTROL,
+		MTC,
+		PTC,
+		SYSTEM,
+		PTC_ALIVE
+	}
+
+	type enumerated ComponentStatus {
+		INACTIVE,
+		RUNNING,
+		STOPPED,
+		KILLED,
+		NULL
+	}
+
+	type enumerated TimerStatus {
+		RUNNING,
+		INACTIVE,
+		EXPIRED,
+		NULL
+	}
+
+	type enumerated PortStatus {
+		STARTED,
+		HALTED,
+		STOPPED
+	}
+
+	type enumerated TypeClass {
+		ADDRESS,
+		ANYTYPE,
+		BITSTRING,
+		BOOLEAN,
+		CHARSTRING,
+		COMPONENT,
+		ENUMERATED,
+		FLOAT,
+		HEXSTRING,
+		INTEGER,
+		OCTETSTRING,
+		RECORD,
+		RECORDOF,
+		ARRAY,
+		SET,
+		SETOF,
+		UNION,
+		UNIVERSALCHARSTRING,
+		VERDICT,
+		DEFAULT,
+		PORT,
+		TIMER,
+	}
+}
