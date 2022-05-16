@@ -1,4 +1,4 @@
-module Codec {
+
 	group Required {
 		signature TypeForName(charstring name) return Type;
 		signature Integer() return Type;
@@ -122,30 +122,30 @@ module SystemAdapter {
 
 	group MessageBasedCommunication {
 
-		signature Send(ComponentId comp, PortId tsi, Address SUTaddress, Message sendMessage) return Status;
+		signature Send(ComponentId comp, PortId tsi, Address addr, Message sendMessage) return Status;
 		signature SendBC(ComponentId comp, PortId tsi, Message sendMessage) return Status;
-		signature SendMC(ComponentId comp, PortId tsi, Addresss SUTaddresses, Message sendMessage) return Status;
+		signature SendMC(ComponentId comp, PortId tsi, Addresss addrs, Message sendMessage) return Status;
 
-		signature EnqueueMsg(PortId tsi, Address SUTaddress, ComponentId comp, Message receivedMessage);
+		signature EnqueueMsg(PortId tsi, Address addr, ComponentId comp, Message receivedMessage);
 	}
 
 	group ProcedureBasedCommunication {
 
-		signature Call(ComponentId comp, PortId tsi, Address SUTaddress, charstring name, Parameters params) return Status;
+		signature Call(ComponentId comp, PortId tsi, Address addr, charstring name, Parameters params) return Status;
 		signature CallBC(ComponentId comp, PortId tsi, charstring name, Parameters params) return Status;
-		signature CallMC(ComponentId comp, PortId tsi, Addresss SUTaddresses, charstring name, Parameters params) return Status;
+		signature CallMC(ComponentId comp, PortId tsi, Addresss addrs, charstring name, Parameters params) return Status;
 
-		signature Reply(ComponentId comp, PortId tsi, Address SUTaddress, charstring name, Parameters params, Parameter returnValue) return Status;
-		signature ReplyBC(ComponentId comp, PortId tsi, charstring name, Parameters params, Parameter returnValue) return Status;
-		signature ReplyMC(ComponentId comp, PortId tsi, Addresss SUTaddresses, charstring name, Parameters params, Parameter returnValue) return Status;
+		signature Reply(ComponentId comp, PortId tsi, Address addr, charstring name, Parameters params, Parameter ret) return Status;
+		signature ReplyBC(ComponentId comp, PortId tsi, charstring name, Parameters params, Parameter ret) return Status;
+		signature ReplyMC(ComponentId comp, PortId tsi, Addresss addrs, charstring name, Parameters params, Parameter ret) return Status;
 
-		signature Raise(ComponentId comp, PortId tsi, Address SUTaddress, charstring name, Exception exc) return Status;
+		signature Raise(ComponentId comp, PortId tsi, Address addr, charstring name, Exception exc) return Status;
 		signature RaiseBC(ComponentId comp, PortId tsi, charstring name, Exception exc) return Status;
-		signature RaiseMC(ComponentId comp, PortId tsi, Addresss SUTaddresses, charstring name, Exception exc) return Status;
+		signature RaiseMC(ComponentId comp, PortId tsi, Addresss addrs, charstring name, Exception exc) return Status;
 
-		signature EnqueueCall(PortId tsi, Address SUTaddress, ComponentId comp, charstring name, Parameters params);
-		signature EnqueueReply(PortId tsi, Address SUTaddress, ComponentId comp, charstring name, Parameters params, Parameter returnValue);
-		signature EnqueueException(PortId tsi, Address SUTaddress, ComponentId comp, charstring name, Exception exc);
+		signature EnqueueCall(PortId tsi, Address addr, ComponentId comp, charstring name, Parameters params);
+		signature EnqueueReply(PortId tsi, Address addr, ComponentId comp, charstring name, Parameters params, Parameter ret);
+		signature EnqueueException(PortId tsi, Address addr, ComponentId comp, charstring name, Exception exc);
 	}
 }
 
@@ -159,7 +159,7 @@ module PlatformAdapter {
 	signature TimerRunning(TimerId id, out boolean running) return Status;
 	signature Timeout(TimerId id);
 
-	signature ExternalFunction(FunctionId id, inout Parameters params, out Parameter returnValue) return Status;
+	signature ExternalFunction(FunctionId id, inout Parameters params, out Parameter ret) return Status;
 
 	signature Self() return ComponentId;
 
@@ -169,6 +169,10 @@ module PlatformAdapter {
 }
 
 module Types {
+
+	type any Value
+
+
 	type native Address;
 	type native ComponentId;
 	type native Exception;
@@ -187,9 +191,9 @@ module Types {
 	type charstring charstring
 
 	type enumerated ParameterPassingMode {
-		IN_MODE,
-		OUT_MODE,
-		INOUT_MODE
+		IN,
+		OUT,
+		INOUT
 	}
 
 	type record Parameter {
