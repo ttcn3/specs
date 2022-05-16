@@ -5,3 +5,9 @@ purpose to help with tool creation and streamlining.
 
 The files provides in this repository are experimental and not official part of
 TTCN-3 standard. But we try to keep it as close as possible.
+
+
+## Work in Progress
+
+All files here are still a rough draft version and not really functional, yet. Your
+sugguestions and improvements are very welcome.
