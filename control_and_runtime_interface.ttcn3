@@ -1,4 +1,4 @@
-
+module Codec {
 	group Required {
 		signature TypeForName(charstring name) return Type;
 		signature Integer() return Type;
