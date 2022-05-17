@@ -4,11 +4,9 @@
 # This Grammar is still very much work in progress.
 
 
-Module: 'module' NAME Language? '{' {ModuleDef} '}';
-ModuleDef: Visibility? Decl With? ';'?;
+Module: 'module' Name Language? '{' (ModuleDef ';'?)* '}' With? ';'?
 
-# Decl produces top-level declarations such as templates, functions, imports, ...
-Decl
+ModuleDef
     : Altstep
     | BehaviorType
     | Class
@@ -31,22 +29,31 @@ Decl
     ;
 
 # Group declaration
-Group     : 'group' NAME '{' {ModuleDef} '}' ;
+Group: Visibility? 'group' Name '{' (ModuleDef ';'?)* '}' With?
 
 # Friend declaration
-Friend    : 'friend' 'module' Refs;
-
+Friend: Visibility? 'friend' 'module' Refs With?
 
 # Import declaration
-Import    : 'import' 'from' REF ('->' NAME)? ('all' ('except' '{' {ExceptSpec} '}')?|'{' {ImportSpec} '}') ;
-ExceptSpec: Kind ('all'|Refs)
-ImportSpec:
+Import: Visibility? 'import' 'from' REF ('->' Name)? ('all' ExceptSpec? | ImportSpec);
+    ;
 
-Kind
+ExceptSpec: 'except' '{' ( ExceptStmt ';'? )* '}';
+ExceptStmt:
+    : ImportKind (Refs|"all")
+    | "group"    (Refs|"all")
+    ;
+
+ImportSpec:'{' ( ImportStmt ';'? )* '}';
+ImportStmt
+    : ImportKind (Refs|"all" ("except" Refs)?)
+    | "group"    (Ref ExceptSpec?)+
+    ;
+
+ImportKind
   : 'altstep'
   | 'const'
   | 'function'
-  | 'group'
   | 'import'
   | 'modulepar'
   | 'signature'
@@ -55,26 +62,41 @@ Kind
   | 'type'
   ;
 
-Signature : 'signature' NAME FormalPars ('return' REF | 'noblock')? Exception?;
-Component : 'type' 'component' NAME Extends? '{' ComponentBody '}' ;
-Port      : 'type' 'port' NAME ('message'|'procedure'|'stream') 'realtime'? '{' PortBody '}' ;
-SubType   : 'type' REF NAME ArrayDef ValueConstraints?;
-Struct    : 'type' ('record'|'set'|'union') NAME { StructBody };
-List      : 'type' ('record'|'set') ('length' '(' Expr ')')? 'of' REF NAME;
-Enum      : 'type' 'enumerated' NAME '{' EnumBody '}' ;
-Map       : 'type' 'map' 'from' REF 'to' REF NAME ;
+# Signature declaration
+Signature: 'signature' Name FormalPars ('return' REF | 'noblock')? Exception?;
+
+# Component declaration
+Component: 'type' 'component' Name Extends? '{' ComponentBody '}';
+
+# Port declaration
+Port: 'type' 'port' Name ('message'|'procedure'|'stream') 'realtime'? ('map' 'to' Refs)? ('connect' 'to' Refs)? '{' (PortAttribute ';'?)* '}';
+
+PortAttribute
+   : 'address' Ref;
+   | 'map' 'param' FormalPars
+   | 'unmap' 'param' FormalPars
+   | ('in'|'out'|'inout') (REF  PortTranslation? ','? )+
+   ;
+
+PortTranslation:('from'|'to') (REF 'with' REF '(' ')' ','?)*)?;
+
+SubType   : 'type' REF Name ArrayDef ValueConstraints?;
+Struct    : 'type' ('record'|'set'|'union') Name { StructBody };
+List      : 'type' ('record'|'set') ('length' '(' Expr ')')? 'of' REF Name;
+Enum      : 'type' 'enumerated' Name '{' EnumBody '}' ;
+Map       : 'type' 'map' 'from' REF 'to' REF Name ;
 Class     : 'type' 'external'? 'class' Modifier? Name Extends? {ConfigSpec} ClassBody ('finally' Block)? ;
 
-TestcaseType : 'type' 'testcase' NAME FormalPars {ConfigSpec};
-FunctionType : 'type' 'function' Modifiers NAME FormalPars {ConfigSpec} ReturnSpec? ;
-AltstepType  : 'type' 'altstep' Modifiers 'interleave'? NAME FormalPars {ConfigSpec} ;
+TestcaseType : 'type' 'testcase' Name FormalPars {ConfigSpec};
+FunctionType : 'type' 'function' Modifiers Name FormalPars {ConfigSpec} ReturnSpec? ;
+AltstepType  : 'type' 'altstep' Modifiers 'interleave'? Name FormalPars {ConfigSpec} ;
 
-VarDecl  : ('const'|'var'|'modulepar') 'template'? Restriction? Modifiers REF { NAME ArrayDef                      ':=' Expr ','? ... };
-Template :                              'template'  Restriction? Modifiers REF   NAME FormalPars? ('modifies' REF)? ':=' Expr;
-Testcase : 'testcase' NAME FormalPars {ConfigSpec} Block;
-FuncDecl : 'external'? 'function' Modifiers NAME FormalPars {ConfigSpec} ReturnSpec? Exception? Block?;
-Config   : 'configuration' NAME FormalPars {ConfigSpec} Block;
-Altstep  : 'altstep' Modifiers 'interleave'? NAME FormalPars {ConfigSpec} Block;
+VarDecl  : ('const'|'var'|'modulepar') 'template'? Restriction? Modifiers REF { Name ArrayDef                      ':=' Expr ','? ... };
+Template :                              'template'  Restriction? Modifiers REF   Name FormalPars? ('modifies' REF)? ':=' Expr;
+Testcase : 'testcase' Name FormalPars {ConfigSpec} Block;
+FuncDecl : 'external'? 'function' Modifiers Name FormalPars {ConfigSpec} ReturnSpec? Exception? Block?;
+Config   : 'configuration' Name FormalPars {ConfigSpec} Block;
+Altstep  : 'altstep' Modifiers 'interleave'? Name FormalPars {ConfigSpec} Block;
 
 
 # Statements
@@ -108,7 +130,7 @@ AltStmt    : ('alt'|'interleave') Modifiers? Block
 Refs: REF { ',' REF }
 
 Extends: 'extends' Refs
-Lanugage: 'language' STRING { ',' STRING }
+Language: 'language' STRING { ',' STRING }
 ReturnSpec: 'return' 'template'? Restriction? REF ArrayDef? ;
 
 ValueConstraints: '(' Expr { ',' Expr } ')';
@@ -136,12 +158,7 @@ WithStmt :  ('encode'|'variant'|'display'|'extension'|'optional') ('override'|'@
 Visibility :'private'|'public'|'friend'
 Modifiers : { MODIF }
 
-PortBody := 'address' Ref;
-| 'map' 'param' FormalPars
-| 'unmap' 'param' FormalPars
-| ('in'|'out'|'inout') {REF (('from'|'to') {REF 'with' REF '()' ','?})? ','? }+
-
-NAME:ID
+Name:ID;
 REF
 	: ID TypePars?
 	| 'any'
