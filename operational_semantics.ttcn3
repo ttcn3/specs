@@ -1,0 +1,127 @@
+module Types {
+
+	// A Module state
+	type record Module {
+		Entity Control,
+		// The TEST-CONFIGURATION state represents the test configurations that is instantiated when a test case is executed by module control.
+		Config Config,
+	}
+
+	//
+	type record Config {
+
+		record of Entity All,
+		record of Port Ports,
+
+		// Verdict is the actual global test verdict.
+		Verdict Verdict,
+
+		record of record { charstring CompID, Verdict v } Done
+		record of record { charstring CompID, Verdict v } Wait
+	}
+
+	type native Frame;
+	type native Default;
+	type native Timer;
+
+	type record Entity {
+
+		// Status describes the state of a module control or test component.
+		enumerated { ACTIVE, BREAK, SNAPSHOT, REPEAT, BLOCKED } Status,
+
+		// Controls is a stack of function calls. The top element has to be interpreted next.
+		record of Frame Controls,
+
+		// Defaults is a stack of activated defaults.
+		record of Default Defaults,
+
+		// During the execution of the default mechanism, the DEFAULT-POINTER refers to the next default that has to be
+		// evaluated if the actual default terminates unsuccessfully.
+		Default NextDefault,
+
+		// A stack for intermediate results of operations, functions and statements.
+		record of Value Values,
+
+		// Verdict stores the actual local verdict of a test component.
+		Verdict Verdict,
+
+		// A timer to guard the execution time of test cases or the duration of call operations.
+		Timer Timer
+
+		// Variables stores scopes with variable bindings (DATA-STATE)
+		record of map from VariableID to Value Variables
+
+		// Timers stores scopes with variable bindings (DATA-STATE)
+		record of map from VariableID to TimerID Timers
+
+		// Ports stores scopes with variable bindings (DATA-STATE)
+		record of map from VariableID to PortID Ports
+
+		// SNAP-ALIVE
+		// SNAP-DONE
+		// SNAP-KILLED
+
+		// KeepAlive indicates whether the entity can be restarted
+		// after its termination or not.
+		bool KeepAlive
+	}
+
+	type float Duration;
+
+	type record Timer {
+		charstring Name,
+		charstring Location,
+
+		// Status denotes whether a timer is active, inactive or has timed out
+		enumerated { IDLE, RUNNING, TIMEOUT } Status,
+
+		// Default describes the default duration of a timer.
+		Duration Default,
+
+		// Actual describes the actual duration with which a running
+		// timer has been started.
+		Duration Actual,
+
+		// TimeLeft describes the actual duration that a running timer
+		// has to run before it times out.
+		Duration TimeLeft,
+
+		// SNAP-Value
+		// SNAP-Status
+	}
+
+	type record Port {
+		// name that is used to declare the port in the component type
+		// definition
+		charstring Name,
+
+		// the test component that owns the port
+		charsting owner,
+
+		// Status provides the actual status of the port.
+		enumerated { STARTED, HALTED, STOPPED } Status,
+
+		// Connections keeps track of the connections between the
+		// different ports in the test system.
+		record of Connection Connections,
+
+		// Queue stores the messages, calls, replies and exceptions
+		// that are received at this port but have not yet been
+		// consumed.
+		record of Value Queue,
+
+		// The SNAP-VALUE supports the TTCN-3 snapshot mechanism. When
+		// a snapshot is taken, the first element in VALUE-QUEUE is
+		// copied into SNAP-VALUE. SNAP-VALUE will get the value NULL
+		// if VALUE-QUEUE is empty or STATUS is STOPPED.
+		Value SnapValue
+	}
+
+	type record Connection {
+		// RemoteEntity is the unique identifier of the test component that owns the remote port.
+		Entity RemoteEntity
+
+		//
+		PortID RemotePortName
+	}
+}
