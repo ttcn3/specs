@@ -79,18 +79,26 @@ PortAttribute
 
 PortTranslation:('from'|'to') (REF 'with' REF '(' ')' ','?)*)?;
 
-# Subtypes
-SubType   : 'type' REF Name ArrayDef? ValueConstraints?;
+# User defined types
 
-# Record, Set and Unions
-Struct: 'type' ('record'|'set'|'union') Name '{' (StructMember ','?)* '}';
+SubType: 'type' REF Name ArrayDef? ValueConstraints?;
 
-StructMember: "@default"? NestedType Name ArrayDef? Constraint?';
+Struct: 'type' ('record'|'set'|'union') Name
+        '{'
+           ( "@default"? NestedType Name ArrayDef? Constraint? ','? )*
+	'}';
 
-List      : 'type' ('record'|'set') ('length' '(' Expr ')')? 'of' NestedType Name;
-Enum      : 'type' 'enumerated' Name '{' EnumBody '}' ;
-Map       : 'type' 'map' 'from' REF 'to' REF Name ;
-Class     : 'type' 'external'? 'class' Modifier? Name Extends? ConfigSpec* ClassBody ('finally' Block)? ;
+
+List: 'type' ('record'|'set') ('length' '(' Expr ')')? 'of' NestedType Name;
+
+Enum: 'type' 'enumerated' Name
+      '{'
+          ( Name ('(' Expr ')')? ','? )*
+      '}';
+
+Map: 'type' 'map' 'from' REF 'to' REF Name;
+
+Class: 'type' 'external'? 'class' Modifier? Name Extends? ConfigSpec* ClassBody ('finally' Block)? ;
 
 TestcaseType : 'type' 'testcase' Name FormalPars ConfigSpec*;
 FunctionType : 'type' 'function' Modifiers? Name FormalPars ConfigSpec* ReturnSpec? ;
@@ -121,16 +129,19 @@ Stmt
     | AltStmt
     ;
 
-IfStmt     : 'if' '(' Expr ')' Block {'else' 'if' '(' Expr ')'} ('else' Block)?
-SelectStmt : 'select' ('union'|'class')? '(' Expr ')' SelectBody
-ForStmt    : 'for' '(' (AssignStmt|VarDecl); Expr; AssignStmt ')' Block
-WhileStmt  : 'while' '(' Expr ')' Block
-DoStmt     : 'do' Block 'while' '(' Expr ')'
-JumpStmt   : ('label'|'goto') ID
-ReturnStmt : 'return' Expr?
-AltStmt    : ('alt'|'interleave') Modifiers? Block
 
+IfStmt     : 'if' '(' Expr ')' Block {'else' 'if' '(' Expr ')'} ('else' Block)?;
+SelectStmt : 'select' ('union'|'class')? '(' Expr ')' SelectBody;
+ForStmt    : 'for' '(' (AssignStmt|VarDecl); Expr; AssignStmt ')' Block;
+WhileStmt  : 'while' '(' Expr ')' Block;
+DoStmt     : 'do' Block 'while' '(' Expr ')';
+JumpStmt   : ('label'|'goto') ID;
+ReturnStmt : 'return' Expr?;
+AltStmt    : ('alt'|'interleave') Modifiers? Block;
 
+Block: BasicBlock ('catch' '(' Ref Name ')' BasicBlock)? ('finally' BasicBlock)?;
+
+BasicBlock: '{' ( Stmt ';'? )* '}';
 
 Refs: REF { ',' REF }
 
@@ -150,7 +161,6 @@ ConfigSpec
 
 Exception: 'exception' '(' Refs ')'
 # Secondary rules
-Block 
 FormalPars
 ArrayDef
 ExceptSpec
