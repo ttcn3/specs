@@ -1,8 +1,14 @@
-# TTCN-3 Grammar
-# ==============
-#
-# This Grammar is still very much work in progress.
+//
+// TTCN-3 Grammar
+// ==============
+//
+// This Grammar is still very much work in progress.
 
+
+//
+// Modules, module defintions and declarations.
+// --------------------------------------------
+//
 
 Module: 'module' Name Language? '{' (ModuleDef ';'?)* '}' With? ';'?
 
@@ -28,14 +34,14 @@ ModuleDef
     | VarDecl
     ;
 
-# Group declaration
+// Group declaration
 Group: Visibility? 'group' Name '{' (ModuleDef ';'?)* '}' With?;
 
-# Friend declaration
+// Friend declaration
 Friend: Visibility? 'friend' 'module' Refs With?;
 
-# Import declaration
-Import: Visibility? 'import' 'from' REF ('->' Name)? ('all' ExceptSpec? | ImportSpec);
+// Import declaration
+Import: Visibility? 'import' 'from' REF ('->' Name)? ('all' ExceptSpec? | ImportSpec) With?;
 
 ExceptSpec: 'except' '{' ( ExceptStmt ';'? )* '}';
 ExceptStmt:
@@ -61,14 +67,14 @@ ImportKind
     | 'type'
     ;
 
-# Signature declaration
-Signature: 'signature' Name FormalPars ('return' REF | 'noblock')? Exception?;
+// Signature declaration
+Signature: Visibility? 'signature' Name FormalPars ('return' REF | 'noblock')? Exception? With?;
 
-# Component declaration
-Component: 'type' 'component' Name Extends? '{' ComponentBody '}';
+// Component declaration
+Component: Visibility? 'type' 'component' Name Extends? '{' ComponentBody '}' With?;
 
-# Port declaration
-Port: 'type' 'port' Name ('message'|'procedure'|'stream') 'realtime'? ('map' 'to' Refs)? ('connect' 'to' Refs)? '{' (PortAttribute ';'?)* '}';
+// Port declaration
+Port: Visibility? 'type' 'port' Name ('message'|'procedure'|'stream') 'realtime'? ('map' 'to' Refs)? ('connect' 'to' Refs)? '{' (PortAttribute ';'?)* '}' With?;
 
 PortAttribute
     : 'map'   'param' FormalPars
@@ -79,40 +85,59 @@ PortAttribute
 
 PortTranslation:('from'|'to') (REF 'with' REF '(' ')' ','?)*)?;
 
-# User defined types
+// User defined types
 
-SubType: 'type' REF Name ArrayDef? ValueConstraints?;
+SubType: Visibility? 'type' REF Name ArrayDef? ValueConstraints? With?;
 
-Struct: 'type' ('record'|'set'|'union') Name
+Struct: Visibility? 'type' ('record'|'set'|'union') Name
         '{'
            ( "@default"? NestedType Name ArrayDef? Constraint? ','? )*
-	'}';
+	'}' With?;
 
 
-List: 'type' ('record'|'set') ('length' '(' Expr ')')? 'of' NestedType Name;
+List: Visibility? 'type' ('record'|'set') ('length' '(' Expr ')')? 'of' NestedType Name With?;
 
-Enum: 'type' 'enumerated' Name
+Enum: Visibility? 'type' 'enumerated' Name
       '{'
           ( Name ('(' Expr ')')? ','? )*
-      '}';
+      '}' With?;
 
-Map: 'type' 'map' 'from' REF 'to' REF Name;
+Map: Visibility? 'type' 'map' 'from' REF 'to' REF Name With?;
 
-Class: 'type' 'external'? 'class' Modifier? Name Extends? ConfigSpec* ClassBody ('finally' Block)? ;
+Class: Visibility? 'type' 'external'? 'class' MODIF* Name Extends? ConfigSpec* ClassBody ('finally' Block)? With?;
 
-TestcaseType : 'type' 'testcase' Name FormalPars ConfigSpec*;
-FunctionType : 'type' 'function' Modifiers? Name FormalPars ConfigSpec* ReturnSpec? ;
-AltstepType  : 'type' 'altstep' Modifiers? 'interleave'? Name FormalPars ConfigSpec* ;
+TestcaseType: Visibility? 'type' 'testcase' Name FormalPars ConfigSpec* With?;
 
-VarDecl  : ('const'|'var'|'modulepar') 'template'? Restriction? Modifiers? REF { Name ArrayDef                      ':=' Expr ','? ... };
-Template :                              'template'  Restriction? Modifiers? REF   Name FormalPars? ('modifies' REF)? ':=' Expr;
-Testcase : 'testcase' Name FormalPars {ConfigSpec} Block;
-FuncDecl : 'external'? 'function' Modifiers Name FormalPars {ConfigSpec} ReturnSpec? Exception? Block?;
-Config   : 'configuration' Name FormalPars {ConfigSpec} Block;
-Altstep  : 'altstep' Modifiers 'interleave'? Name FormalPars {ConfigSpec} Block;
+FunctionType: Visibility? 'type' 'function' MODIF* Name FormalPars ConfigSpec* ReturnSpec? With?;
+
+AltstepType: Visibility? 'type' 'altstep' MODIF* 'interleave'? Name FormalPars ConfigSpec* With?;
 
 
-# Statements
+// Variable declaration and module parameters.
+
+VarDecl: Visibility? ('const'|'var'|'modulepar') 'template'? Restriction? MODIF* REF Declarator ( ',' Declarator)* With?;
+
+Declarator: Name (':=' Expr)?
+
+// Temaplte declaration
+Template: Visibility? 'template' Restriction? MODIF* REF Name FormalPars? ('modifies' REF)? ':=' Expr With?;
+
+// Testcase declaration
+Testcase: Visibility? 'testcase' Name FormalPars ConfigSpec* Block;
+
+// Function declaration
+FuncDecl: Visibility? 'external'? 'function' MODIF* Name FormalPars ConfigSpec* ReturnSpec? Exception? Block? With?;
+
+// Configuration declaration
+Config: Visibility? 'configuration' Name FormalPars ConfigSpec* Block With?;
+
+// Altstep declaration
+Altstep: Visibility? 'altstep' MODIF* 'interleave'? Name FormalPars ConfigSpec* Block With?;
+
+//
+// Statements
+// ----------
+//
 
 Stmt
     : Expr
@@ -137,7 +162,7 @@ WhileStmt  : 'while' '(' Expr ')' Block;
 DoStmt     : 'do' Block 'while' '(' Expr ')';
 JumpStmt   : ('label'|'goto') ID;
 ReturnStmt : 'return' Expr?;
-AltStmt    : ('alt'|'interleave') Modifiers? Block;
+AltStmt    : ('alt'|'interleave') MODIF* Block;
 
 Block: BasicBlock ('catch' '(' Ref Name ')' BasicBlock)? ('finally' BasicBlock)?;
 
@@ -171,7 +196,6 @@ With     : 'with' '{' { WithStmt} '}'
 WithStmt :  ('encode'|'variant'|'display'|'extension'|'optional') ('override'|'@local')? (REF|AllRef)? STRING 
 
 Visibility :'private'|'public'|'friend'
-Modifiers : { MODIF }
 
 Name:ID;
 REF
