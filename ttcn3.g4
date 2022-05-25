@@ -113,6 +113,8 @@ Map: Visibility? 'type' 'map' 'from' Ref 'to' Ref Name With?;
 
 Class: Visibility? 'type' 'external'? 'class' MODIF* Name Extends? ConfigSpec* ClassBody ('finally' Block)? With?;
 
+ClassBody: '{' '}';
+
 TestcaseType: Visibility? 'type' 'testcase' Name FormalPars ConfigSpec* With?;
 
 FunctionType: Visibility? 'type' 'function' MODIF* Name FormalPars ConfigSpec* ReturnSpec? With?;
@@ -184,6 +186,12 @@ Block: BasicBlock ('catch' '(' Ref Name ')' BasicBlock)? ('finally' BasicBlock)?
 
 BasicBlock: '{' ( Stmt ';'? )* '}';
 
+//
+// Expressions
+// -----------
+//
+
+Expr: ID;
 
 //
 // Fragments, building blocks and helpers
@@ -266,11 +274,22 @@ TemplateRestriction: 'omit' | 'value' | 'present';
 
 
 NestedTemplate
-    : template
-    | template ( TemplateRestriction )
+    : 'template'
+    | 'template' '(' TemplateRestriction ')'
     | TemplateRestriction
     ;
 
+
+NestedType
+    : Ref
+    | NestedStruct
+    | NestedList
+    | NestedEnum
+    ;
+
+NestedStruct: ('record'|'set'|'union') '{' StructMember ((','|';') StructMember)* (','|';')? '}';
+NestedList: ('record'|'set') ('length' '(' Expr ')')? 'of' NestedType;
+NestedEnum: 'enumerated' '{' EnumLabel ((','|';') EnumLabel)* (','|';')? '}';
 
 ID: [a-zA-Z0-9-]+;
 MODIF: '@' ID;
