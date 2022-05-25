@@ -235,17 +235,19 @@ Visibility: 'private'|'public'|'friend';
 
 Name: ID;
 Ref : ID TypePars?
+    | 'address'
+    | 'all' 'component'
+    | 'all' 'port'
+    | 'all' 'timer'
     | 'any'
     | 'any' 'component'
     | 'any' 'port'
     | 'any' 'timer'
-    | 'all' 'component'
-    | 'all' 'port'
-    | 'all' 'timer'
-    | 'address'
-    | 'system'
-    | 'mtc'
     | 'map'
+    | 'mtc'
+    | 'self'
+    | 'system'
+    | 'this'
     | 'timer'
     | 'unmap'
     ;
@@ -260,14 +262,13 @@ Declarator: Name ArrayDef* (':=' Expr)?;
 
 ArrayDef: '[' Expr ']';
 
-
 TemplateRestriction: 'omit' | 'value' | 'present';
 
 
 NestedTemplate
     : template
     | template ( TemplateRestriction )
-    |
+    | TemplateRestriction
     ;
 
 
