@@ -1,26 +1,28 @@
-//
 // TTCN-3 Grammar
 // ==============
 //
 // This Grammar is still very much work in progress.
+//
 
+grammar ttcn3;
 
 //
 // Modules, module defintions and declarations.
 // --------------------------------------------
 //
 
-Module: 'module' Name Language? '{' (ModuleDef ';'?)* '}' With? ';'?
+Module: 'module' Name Language? '{' (ModuleDef ';'?)* '}' With? ';'?;
 
 ModuleDef
     : Altstep
-    | BehaviorType
+    | AltstepType
     | Class
     | Component
     | Config
     | Enum
     | Friend
     | Function
+    | FunctionType
     | Group
     | Import
     | List
@@ -31,6 +33,7 @@ ModuleDef
     | SubType
     | Template
     | Testcase
+    | TestcaseType
     | VarDecl
     ;
 
@@ -41,18 +44,18 @@ Group: Visibility? 'group' Name '{' (ModuleDef ';'?)* '}' With?;
 Friend: Visibility? 'friend' 'module' Refs With?;
 
 // Import declaration
-Import: Visibility? 'import' 'from' REF ('->' Name)? ('all' ExceptSpec? | ImportSpec) With?;
+Import: Visibility? 'import' 'from' Ref ('->' Name)? ('all' ExceptSpec? | ImportSpec) With?;
 
 ExceptSpec: 'except' '{' ( ExceptStmt ';'? )* '}';
-ExceptStmt:
-    : ImportKind (Refs|"all")
-    | "group"    (Refs|"all")
+ExceptStmt
+    : ImportKind (Refs|'all')
+    | 'group'    (Refs|'all')
     ;
 
 ImportSpec:'{' ( ImportStmt ';'? )* '}';
 ImportStmt
-    : ImportKind (Refs|"all" ("except" Refs)?)
-    | "group"    (REF ExceptSpec?)+
+    : ImportKind (Refs|'all' ('except' Refs)?)
+    | 'group'    (Ref ExceptSpec?)+
     ;
 
 ImportKind
@@ -68,10 +71,10 @@ ImportKind
     ;
 
 // Signature declaration
-Signature: Visibility? 'signature' Name FormalPars ('return' REF | 'noblock')? Exception? With?;
+Signature: Visibility? 'signature' Name FormalPars ('return' Ref | 'noblock')? Exception? With?;
 
 // Component declaration
-Component: Visibility? 'type' 'component' Name Extends? '{' ComponentBody '}' With?;
+Component: Visibility? 'type' 'component' Name Extends? Block With?;
 
 // Port declaration
 Port: Visibility? 'type' 'port' Name ('message'|'procedure'|'stream') 'realtime'? ('map' 'to' Refs)? ('connect' 'to' Refs)? '{' (PortAttribute ';'?)* '}' With?;
@@ -79,30 +82,34 @@ Port: Visibility? 'type' 'port' Name ('message'|'procedure'|'stream') 'realtime'
 PortAttribute
     : 'map'   'param' FormalPars
     | 'unmap' 'param' FormalPars
-    | 'address' REF PortTranslation?
-    | ('in'|'out'|'inout') (REF  PortTranslation? ','? )+
+    | 'address' Ref PortTranslation?
+    | ('in'|'out'|'inout') PortElement (',' PortElement)* ','?
     ;
 
-PortTranslation:('from'|'to') (REF 'with' REF '(' ')' ','?)*)?;
+PortElement: Ref PortTranslation?;
+PortTranslation:('from'|'to') Ref 'with' Ref '(' ')';
 
 // User defined types
 
-SubType: Visibility? 'type' REF Name ArrayDef? ValueConstraints? With?;
+SubType: Visibility? 'type' Ref Name ArrayDef* ValueConstraints? With?;
 
 Struct: Visibility? 'type' ('record'|'set'|'union') Name
         '{'
-           ( "@default"? NestedType Name ArrayDef? Constraint? ','? )*
+           StructMember ((','|';') StructMember)* (','|';')?
 	'}' With?;
 
+StructMember: '@default'? NestedType Name ArrayDef* ValueConstraints?;
 
 List: Visibility? 'type' ('record'|'set') ('length' '(' Expr ')')? 'of' NestedType Name With?;
 
 Enum: Visibility? 'type' 'enumerated' Name
       '{'
-          ( Name ('(' Expr ')')? ','? )*
+          EnumLabel ((','|';') EnumLabel)* (','|';')?
       '}' With?;
 
-Map: Visibility? 'type' 'map' 'from' REF 'to' REF Name With?;
+EnumLabel: Name ('(' Expr ')')?;
+
+Map: Visibility? 'type' 'map' 'from' Ref 'to' Ref Name With?;
 
 Class: Visibility? 'type' 'external'? 'class' MODIF* Name Extends? ConfigSpec* ClassBody ('finally' Block)? With?;
 
@@ -115,18 +122,19 @@ AltstepType: Visibility? 'type' 'altstep' MODIF* 'interleave'? Name FormalPars C
 
 // Variable declaration and module parameters.
 
-VarDecl: Visibility? ('const'|'var'|'modulepar') 'template'? Restriction? MODIF* REF Declarator ( ',' Declarator)* With?;
+VarDecl: Visibility? ('const'|'var'|'modulepar') NestedTemplate? MODIF* Ref Declarator ( ',' Declarator)* With?;
 
-Declarator: Name (':=' Expr)?
+TimerDecl: 'timer' Declarator ( ',' Declarator)* With?;
+PortDecl: 'port' Ref Declarator ( ',' Declarator)* With?;
 
-// Temaplte declaration
-Template: Visibility? 'template' Restriction? MODIF* REF Name FormalPars? ('modifies' REF)? ':=' Expr With?;
+// Template declaration
+Template: Visibility? 'template' ( '(' TemplateRestriction ')')? MODIF* Ref Name FormalPars? ('modifies' Ref)? ':=' Expr With?;
 
 // Testcase declaration
 Testcase: Visibility? 'testcase' Name FormalPars ConfigSpec* Block;
 
 // Function declaration
-FuncDecl: Visibility? 'external'? 'function' MODIF* Name FormalPars ConfigSpec* ReturnSpec? Exception? Block? With?;
+Function: Visibility? 'external'? 'function' MODIF* Name FormalPars ConfigSpec* ReturnSpec? Exception? Block? With?;
 
 // Configuration declaration
 Config: Visibility? 'configuration' Name FormalPars ConfigSpec* Block With?;
@@ -140,66 +148,93 @@ Altstep: Visibility? 'altstep' MODIF* 'interleave'? Name FormalPars ConfigSpec* 
 //
 
 Stmt
-    : Expr
-    | VarDecl
-    | Template
+    : AltStmt
+    | AssignStmt
     | Block
-    | IfStmt
-    | SelectStmt
-    | ForStmt
-    | WhileStmt
     | DoStmt
-    | JumpStmt
+    | Expr
+    | ForStmt
+    | GotoStmt
+    | GuardStmt
+    | IfStmt
+    | LabelStmt
+    | PortDecl
     | ReturnStmt
-    | AltStmt
+    | SelectStmt
+    | Template
+    | TimerDecl
+    | VarDecl
+    | WhileStmt
     ;
 
-
-IfStmt     : 'if' '(' Expr ')' Block {'else' 'if' '(' Expr ')'} ('else' Block)?;
-SelectStmt : 'select' ('union'|'class')? '(' Expr ')' SelectBody;
-ForStmt    : 'for' '(' (AssignStmt|VarDecl); Expr; AssignStmt ')' Block;
+IfStmt     : 'if' '(' ((AssignStmt|VarDecl) ';')? Expr ')' Block ('else' 'if' '(' Expr ')')* ('else' Block)?;
+SelectStmt : 'select' ('union'|'class')? '(' Expr ')' '{' ( 'case' ('else'|'(' Expr ')') Block )* '}';
+ForStmt    : 'for' '(' (AssignStmt|VarDecl) ('in' Ref|';' Expr';' AssignStmt) ')' Block;
 WhileStmt  : 'while' '(' Expr ')' Block;
 DoStmt     : 'do' Block 'while' '(' Expr ')';
-JumpStmt   : ('label'|'goto') ID;
+GotoStmt   : 'goto' Ref;
+LabelStmt  : 'label' Name;
 ReturnStmt : 'return' Expr?;
 AltStmt    : ('alt'|'interleave') MODIF* Block;
+AssignStmt : Ref ':=' Expr;
+GuardStmt  : '[' Expr? ']' Stmt;
+
 
 Block: BasicBlock ('catch' '(' Ref Name ')' BasicBlock)? ('finally' BasicBlock)?;
 
 BasicBlock: '{' ( Stmt ';'? )* '}';
 
-Refs: REF { ',' REF }
 
-Extends: 'extends' Refs
-Language: 'language' STRING { ',' STRING }
-ReturnSpec: 'return' 'template'? Restriction? REF ArrayDef? ;
+//
+// Fragments, building blocks and helpers
+// --------------------------------------
+//
 
-ValueConstraints: '(' Expr { ',' Expr } ')';
+With     : 'with' '{' WithStmt* '}';
+
+WithStmt :  ('encode'|'variant'|'display'|'extension'|'optional') ('override'|'@local')? ('(' WithQualifier ','? ')')? STRING;
+
+WithQualifier
+    : Ref
+    | '[' Expr ']'
+    | WithKind ( 'except' '{' Refs '}' )?
+    ;
+
+WithKind
+    : 'altstep'
+    | 'const'
+    | 'function'
+    | 'group'
+    | 'modulepar'
+    | 'signature'
+    | 'template'
+    | 'testcase'
+    | 'type'
+    ;
+
+Refs: Ref ( ',' Ref )* ','?;
+
+Extends: 'extends' Refs;
+Language: 'language' STRING ( ',' STRING )* ','?;
+ReturnSpec: 'return' NestedTemplate? Ref ArrayDef* ;
+
+ValueConstraints: '(' Expr ( ',' Expr )* ','? ')';
 
 ConfigSpec
-: 'runs' 'on' REF
-| 'system' REF
-| 'mtc' REF
-| 'port' REF
-| 'execute' 'on' REF
-;
+    : 'runs' 'on' Ref
+    | 'system' Ref
+    | 'mtc' Ref
+    | 'port' Ref
+    | 'execute' 'on' Ref
+    ;
 
-Exception: 'exception' '(' Refs ')'
-# Secondary rules
-FormalPars
-ArrayDef
-ExceptSpec
-ImportSpec
-AllRef
+Exception: 'exception' '(' Refs ')';
 
-With     : 'with' '{' { WithStmt} '}'
-WithStmt :  ('encode'|'variant'|'display'|'extension'|'optional') ('override'|'@local')? (REF|AllRef)? STRING 
 
-Visibility :'private'|'public'|'friend'
+Visibility: 'private'|'public'|'friend';
 
-Name:ID;
-REF
-    : ID TypePars?
+Name: ID;
+Ref : ID TypePars?
     | 'any'
     | 'any' 'component'
     | 'any' 'port'
@@ -215,15 +250,28 @@ REF
     | 'unmap'
     ;
 
-TypePars: '<' TypePar { ',' TypePar } '>'
-TypePar: Todo
+TypePars: '<' TypePar (',' TypePar)* ','? '>';
+TypePar: 'in'? ('type'|'signature'|Ref) Declarator;
 
-NestedType:
-GuardStmt  : '[' Expr? ']' Stmt
-CaseStmt   : 'case' ('else'|'(' Expr ')') Block
-ClassBody
-ModuleBody
-ComponentBody
-StructBody
-EnumBody
-SelectBody
+FormalPars: '(' FormalPar (',' FormalPar)* ','? ')';
+FormalPar: ('in'|'out'|'inout') Ref Declarator;
+
+Declarator: Name ArrayDef* (':=' Expr)?;
+
+ArrayDef: '[' Expr ']';
+
+
+TemplateRestriction: 'omit' | 'value' | 'present';
+
+
+NestedTemplate
+    : template
+    | template ( TemplateRestriction )
+    |
+    ;
+
+
+ID: [a-zA-Z0-9-]+;
+MODIF: '@' ID;
+STRING: '"' ( '""' | ~('\\'|'"') )* '"';
+
