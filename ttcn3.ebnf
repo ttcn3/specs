@@ -12,50 +12,44 @@
 
 Module = "module" Name [Language] "{" {ModuleDef [";"]} "}" [With] [";"].
 
-ModuleDef
-    = Altstep
-    | AltstepType
-    | Class
-    | Component
-    | Config
-    | Enum
-    | Friend
-    | Function
-    | FunctionType
-    | Group
-    | Import
-    | List
-    | Map
-    | Port
-    | Signature
-    | Struct
-    | SubType
-    | Template
-    | Testcase
-    | TestcaseType
-    | VarDecl
-    .
+ModuleDef = Altstep
+          | AltstepType
+          | Class
+          | Component
+          | Config
+          | Enum
+          | Friend
+          | Function
+          | FunctionType
+          | Group
+          | Import
+          | List
+          | Map
+          | Port
+          | Signature
+          | Struct
+          | SubType
+          | Template
+          | Testcase
+          | TestcaseType
+          | VarDecl
+          .
 
-// Group declaration
 Group = [Visibility] "group" Name "{" {ModuleDef [";"]} "}" [With].
 
-// Friend declaration
 Friend = [Visibility] "friend" "module" Refs [With].
 
-// Import declaration
 Import = [Visibility] "import" "from" Ref ["->" Name] ("all" [ExceptSpec] | ImportSpec) [With].
 
 ExceptSpec = "except" "{" { ExceptStmt [";"] } "}".
-ExceptStmt
-    = ImportKind (Refs|"all")
-    | "group"    (Refs|"all")
-    .
+ExceptStmt = ImportKind (Refs|"all")
+           | "group"    (Refs|"all")
+           .
 
-ImportSpec:"{" { ImportStmt [";"] } "}".
-ImportStmt
-    = ImportKind (Refs|"all" ["except" Refs])
-    | "group"    {Ref [ExceptSpec]}
-    .
+ImportSpec = "{" { ImportStmt [";"] } "}".
+ImportStmt = ImportKind (Refs|"all" ["except" Refs])
+           | "group"    {Ref [ExceptSpec]}
+           .
 
 ImportKind
     = "altstep"
