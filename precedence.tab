@@ -1,0 +1,17 @@
+:= : =>
+..
+!
+or
+xor
+and
+not
+== !=
+< <= > =
+<@ << >> @>
+or4b
+xor4b
+and4b
+not4b
++ - &
+* / rem mod
+::

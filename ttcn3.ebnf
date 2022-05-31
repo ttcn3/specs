@@ -80,7 +80,7 @@ PortAttribute
     .
 
 PortElement = Ref [PortTranslation].
-PortTranslation:("from"|"to") Ref "with" Ref "(" ")".
+PortTranslation =("from"|"to") Ref "with" Ref "(" ")".
 
 // User defined types
 
@@ -104,38 +104,38 @@ EnumLabel = Name ["(" Expr ")"].
 
 Map = [Visibility] "type" "map" "from" Ref "to" Ref Name [With].
 
-Class = [Visibility] "type" ["external"] "class" {MODIF} Name [Extends] {ConfigSpec} ClassBody ["finally" Block] [With].
+Class = [Visibility] "type" ["external"] "class" {modif} Name [Extends] {ConfigSpec} ClassBody ["finally" Block] [With].
 
 ClassBody = "{" "}".
 
 TestcaseType = [Visibility] "type" "testcase" Name FormalPars {ConfigSpec} [With].
 
-FunctionType = [Visibility] "type" "function" {MODIF} Name FormalPars {ConfigSpec} [ReturnSpec] [With].
+FunctionType = [Visibility] "type" "function" {modif} Name FormalPars {ConfigSpec} [ReturnSpec] [With].
 
-AltstepType = [Visibility] "type" "altstep" {MODIF} ["interleave"] Name FormalPars {ConfigSpec} [With].
+AltstepType = [Visibility] "type" "altstep" {modif} ["interleave"] Name FormalPars {ConfigSpec} [With].
 
 
 // Variable declaration and module parameters.
 
-VarDecl = [Visibility] ("const"|"var"|"modulepar") [NestedTemplate] {MODIF} Ref Declarator { "," Declarator} [With].
+VarDecl = [Visibility] ("const"|"var"|"modulepar") [NestedTemplate] {modif} Ref Declarator { "," Declarator} [With].
 
 TimerDecl = "timer" Declarator { "," Declarator} [With].
 PortDecl = "port" Ref Declarator { "," Declarator} [With].
 
 // Template declaration
-Template = [Visibility] "template" [ "(" TemplateRestriction ")"] {MODIF} Ref Name [FormalPars] ["modifies" Ref] ":=" Expr [With].
+Template = [Visibility] "template" [ "(" TemplateRestriction ")"] {modif} Ref Name [FormalPars] ["modifies" Ref] ":=" Expr [With].
 
 // Testcase declaration
 Testcase = [Visibility] "testcase" Name FormalPars {ConfigSpec} Block.
 
 // Function declaration
-Function = [Visibility] ["external"] "function" {MODIF} Name FormalPars {ConfigSpec} [ReturnSpec] [Exception] [Block] [With].
+Function = [Visibility] ["external"] "function" {modif} Name FormalPars {ConfigSpec} [ReturnSpec] [Exception] [Block] [With].
 
 // Configuration declaration
 Config = [Visibility] "configuration" Name FormalPars {ConfigSpec} Block [With].
 
 // Altstep declaration
-Altstep = [Visibility] "altstep" {MODIF} ["interleave"] Name FormalPars {ConfigSpec} Block [With].
+Altstep = [Visibility] "altstep" {modif} ["interleave"] Name FormalPars {ConfigSpec} Block [With].
 
 //
 // Statements
@@ -144,7 +144,6 @@ Altstep = [Visibility] "altstep" {MODIF} ["interleave"] Name FormalPars {ConfigS
 
 Stmt
     = AltStmt
-    | AssignStmt
     | Block
     | DoStmt
     | Expr
@@ -170,7 +169,7 @@ DoStmt     = "do" Block "while" "(" Expr ")".
 GotoStmt   = "goto" Ref.
 LabelStmt  = "label" Name.
 ReturnStmt = "return" [Expr].
-AltStmt    = ("alt"|"interleave") {MODIF} Block.
+AltStmt    = ("alt"|"interleave") {modif} Block.
 AssignStmt = Ref ":=" Expr.
 GuardStmt  = "[" [Expr] "]" Stmt.
 
@@ -184,7 +183,81 @@ BasicBlock = "{" { Stmt [";"] } "}".
 // -----------
 //
 
-Expr = ID.
+Expr = PrimaryExpr
+     | Literal
+     | UnaryExpr
+     | BinaryExpr
+     .
+
+PrimaryExpr = ID { "." ID | "[" Expr "]" | "(" Exprs ")" }.
+
+Literal = int
+        | float
+	| string
+	| bitstring
+	| boolean
+	| verdict
+	| "-"
+	.
+
+UnaryExpr = "!" Expr
+          | "+" Expr
+	  | "-" Expr
+          | "not" Expr
+          | "not4b" Expr
+	  .
+
+BinaryExpr = Expr ":=" Expr
+           | Expr ":" Expr
+           | Expr "=>" Expr
+           | Expr ".." Expr
+           | Expr "or" Expr
+           | Expr "xor" Expr
+           | Expr "and" Expr
+           | Expr "==" Expr
+           | Expr "!=" Expr
+           | Expr "<" Expr
+           | Expr "<=" Expr
+           | Expr ">" Expr
+           | Expr ">=" Expr
+           | Expr "<@" Expr
+           | Expr "<<" Expr
+           | Expr ">>" Expr
+           | Expr "@>" Expr
+           | Expr "or4b" Expr
+           | Expr "xor4b" Expr
+           | Expr "and4b" Expr
+           | Expr "+" Expr
+           | Expr "-" Expr
+           | Expr "&" Expr
+           | Expr "*" Expr
+           | Expr "/" Expr
+           | Expr "rem" Expr
+           | Expr "mod" Expr
+           | Expr "::" Expr
+	   .
+
+Ref = id [TypePars]
+    | "address"
+    | "all" "component"
+    | "all" "port"
+    | "all" "timer"
+    | "any"
+    | "any" "component"
+    | "any" "port"
+    | "any" "timer"
+    | "map"
+    | "mtc"
+    | "self"
+    | "system"
+    | "this"
+    | "timer"
+    | "unmap"
+    .
+
+TypePars = "<" TypePar { ","  Typepar } [","] ">" .
+
+TypePar = [ Name ":=" ] NestedType .
 
 //
 // Fragments, building blocks and helpers
@@ -193,7 +266,7 @@ Expr = ID.
 
 With     = "with" "{" {WithStmt} "}".
 
-WithStmt =  ("encode"|"variant"|"display"|"extension"|"optional") ["override"|"@local"] ["(" WithQualifier [","] ")"] STRING.
+WithStmt =  ("encode"|"variant"|"display"|"extension"|"optional") ["override"|"@local"] ["(" WithQualifier [","] ")"] string.
 
 WithQualifier
     = Ref
@@ -216,7 +289,7 @@ WithKind
 Refs = Ref { "," Ref } [","].
 
 Extends = "extends" Refs.
-Language = "language" STRING { "," STRING } [","].
+Language = "language" string { "," string } [","].
 ReturnSpec = "return" [NestedTemplate] Ref {ArrayDef} .
 
 ValueConstraints = "(" Expr { "," Expr } [","] ")".
@@ -234,27 +307,10 @@ Exception = "exception" "(" Refs ")".
 
 Visibility = "private"|"public"|"friend".
 
-Name = ID.
-Ref = ID [TypePars]
-    | "address"
-    | "all" "component"
-    | "all" "port"
-    | "all" "timer"
-    | "any"
-    | "any" "component"
-    | "any" "port"
-    | "any" "timer"
-    | "map"
-    | "mtc"
-    | "self"
-    | "system"
-    | "this"
-    | "timer"
-    | "unmap"
-    .
+Name = id.
 
-TypePars = "<" TypePar {"," TypePar} [","] ">".
-TypePar = ["in"] ("type"|"signature"|Ref) Declarator.
+FormalTypePars = "<" FormalTypePar {"," FormalTypePar} [","] ">".
+FormalTypePar = ["in"] ("type"|"signature"|Ref) Declarator.
 
 FormalPars = "(" FormalPar {"," FormalPar} [","] ")".
 FormalPar = ("in"|"out"|"inout") Ref Declarator.
@@ -283,4 +339,13 @@ NestedType
 NestedStruct = ("record"|"set"|"union") "{" StructMember {[","|";"] StructMember} [","|";"] "}".
 NestedList = ("record"|"set") ["length" "(" Expr ")"] "of" NestedType.
 NestedEnum = "enumerated" "{" EnumLabel {[","|";"] EnumLabel} [","|";"] "}".
+
+int = .
+float = .
+id = .
+string = .
+modif = .
+boolean = "true" | "false" .
+verdict = "error" | "fail" | "inconc" | "none" | "pass" .
+bitstring = .
 
