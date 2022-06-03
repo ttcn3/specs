@@ -10,32 +10,34 @@
 // --------------------------------------------
 //
 
-Module = "module" Name [Language] "{" {ModuleDef [";"]} "}" [With] [";"].
+Module = "module" Name [Language] "{" {Decl [";"]} "}" [With] [";"].
 
-ModuleDef = Altstep
-          | AltstepType
-          | Class
-          | Component
-          | Config
-          | Enum
-          | Friend
-          | Function
-          | FunctionType
-          | Group
-          | Import
-          | List
-          | Map
-          | Port
-          | Signature
-          | Struct
-          | SubType
-          | Template
-          | Testcase
-          | TestcaseType
-          | VarDecl
-          .
+Decl = Altstep
+     | AltstepType
+     | Class
+     | Component
+     | Config
+     | Constructor
+     | Destructor
+     | Enum
+     | Friend
+     | Function
+     | FunctionType
+     | Group
+     | Import
+     | List
+     | Map
+     | Port
+     | Signature
+     | Struct
+     | SubType
+     | Template
+     | Testcase
+     | TestcaseType
+     | VarDecl
+     .
 
-Group = [Visibility] "group" Name "{" {ModuleDef [";"]} "}" [With].
+Group = [Visibility] "group" Name "{" {Decl [";"]} "}" [With].
 
 Friend = [Visibility] "friend" "module" Refs [With].
 
@@ -64,20 +66,29 @@ ImportKind
     .
 
 // Signature declaration
-Signature = [Visibility] "signature" Name FormalPars ["return" Ref | "noblock"] [Exception] [With].
+Signature = [Visibility] "signature" Name FormalPars [Return] ["noblock"] [Exception] [With].
 
 // Component declaration
 Component = [Visibility] "type" "component" Name [Extends] Block [With].
 
 // Port declaration
-Port = [Visibility] "type" "port" Name ("message"|"procedure"|"stream") ["realtime"] ["map" "to" Refs] ["connect" "to" Refs] "{" {PortAttribute [";"]} "}" [With].
+Port = [Visibility] "type" "port" Name PortKind {PortSpec} "{" {PortAttribute [";"]} "}" [With].
 
-PortAttribute
-    = "map"   "param" FormalPars
-    | "unmap" "param" FormalPars
-    | "address" Ref [PortTranslation]
-    | ("in"|"out"|"inout") PortElement {"," PortElement} [","]
-    .
+PortKind = "message"
+         | "procedure"
+	 | "stream"
+	 .
+
+PortSpec = "realtime"
+         | "map" "to" Refs
+	 | "connect" "to" Refs
+	 .
+
+PortAttribute = "map"   "param" FormalPars
+              | "unmap" "param" FormalPars
+              | "address" Ref [PortTranslation]
+              | ("in"|"out"|"inout") PortElement {"," PortElement} [","]
+              .
 
 PortElement = Ref [PortTranslation].
 PortTranslation =("from"|"to") Ref "with" Ref "(" ")".
@@ -86,14 +97,18 @@ PortTranslation =("from"|"to") Ref "with" Ref "(" ")".
 
 SubType = [Visibility] "type" Ref Name {ArrayDef} [ValueConstraints] [With].
 
-Struct = [Visibility] "type" ("record"|"set"|"union") Name
+Struct = [Visibility] "type" StructKind Name
         "{"
            StructMember {[","|";"] StructMember} [","|";"]
 	"}" [With].
 
+StructKind = "record" | "set" | "union"
+	   .
+
 StructMember = ["@default"] NestedType Name {ArrayDef} [ValueConstraints].
 
-List = [Visibility] "type" ("record"|"set") ["length" "(" Expr ")"] "of" NestedType Name [With].
+List = [Visibility] "type" ListKind ["length" "(" Expr ")"] "of" NestedType Name [With].
+ListKind = "record" | "set".
 
 Enum = [Visibility] "type" "enumerated" Name
       "{"
@@ -104,9 +119,10 @@ EnumLabel = Name ["(" Expr ")"].
 
 Map = [Visibility] "type" "map" "from" Ref "to" Ref Name [With].
 
-Class = [Visibility] "type" ["external"] "class" {modif} Name [Extends] {ConfigSpec} ClassBody ["finally" Block] [With].
+Class = [Visibility] "type" ["external"] "class" {modif} Name [Extends] {ConfigSpec} "{" { Def [";"] } "}" ["finally" Block] [With].
 
-ClassBody = "{" "}".
+Constructor = [Visibility] "create" FormalPars ["external" FormalPars] [":" Ref "(" [Exprs] ")" ] [Block] .
+Destructor = "finally" Block.
 
 TestcaseType = [Visibility] "type" "testcase" Name FormalPars {ConfigSpec} [With].
 
