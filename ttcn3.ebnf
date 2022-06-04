@@ -10,7 +10,9 @@
 // --------------------------------------------
 //
 
-Module = "module" Name [Language] "{" {Decl [";"]} "}" [With] [";"].
+Module = "module" Name [Language] "{" Decls "}" [With] [";"].
+
+Decls = { Decl [";"] }.
 
 Decl = Altstep
      | AltstepType
@@ -37,7 +39,7 @@ Decl = Altstep
      | VarDecl
      .
 
-Group = [Visibility] "group" Name "{" {Decl [";"]} "}" [With].
+Group = [Visibility] "group" Name "{" Decls "}" [With].
 
 Friend = [Visibility] "friend" "module" Refs [With].
 
@@ -102,8 +104,7 @@ Struct = [Visibility] "type" StructKind Name
            StructMember {[","|";"] StructMember} [","|";"]
 	"}" [With].
 
-StructKind = "record" | "set" | "union"
-	   .
+StructKind = "record" | "set" | "union".
 
 StructMember = ["@default"] NestedType Name {ArrayDef} [ValueConstraints].
 
@@ -119,7 +120,7 @@ EnumLabel = Name ["(" Expr ")"].
 
 Map = [Visibility] "type" "map" "from" Ref "to" Ref Name [With].
 
-Class = [Visibility] "type" ["external"] "class" {modif} Name [Extends] {ConfigSpec} "{" { Def [";"] } "}" ["finally" Block] [With].
+Class = [Visibility] "type" ["external"] "class" {modif} Name [Extends] {ConfigSpec} "{" Decls "}" ["finally" Block] [With].
 
 Constructor = [Visibility] "create" FormalPars ["external" FormalPars] [":" Ref "(" [Exprs] ")" ] [Block] .
 Destructor = "finally" Block.
