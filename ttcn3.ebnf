@@ -228,6 +228,7 @@ BinaryExpr = Expr ":=" Expr
            | Expr ":" Expr
            | Expr "=>" Expr
            | Expr ".." Expr
+           | Expr "of" Expr
            | Expr "or" Expr
            | Expr "xor" Expr
            | Expr "and" Expr
