@@ -68,10 +68,10 @@ ImportKind
     .
 
 // Signature declaration
-Signature = [Visibility] "signature" Name FormalPars [Return] ["noblock"] [Exception] [With].
+Signature = [Visibility] "signature" Name [FormalTypePars] FormalPars [Return] ["noblock"] [Exception] [With].
 
 // Component declaration
-Component = [Visibility] "type" "component" Name [Extends] Block [With].
+Component = [Visibility] "type" "component" Name [FormalTypePars][Extends] Block [With].
 
 // Port declaration
 Port = [Visibility] "type" "port" Name PortKind {PortSpec} "{" {PortAttribute [";"]} "}" [With].
@@ -97,9 +97,9 @@ PortTranslation =("from"|"to") Ref "with" Ref "(" ")".
 
 // User defined types
 
-SubType = [Visibility] "type" Ref Name {ArrayDef} [ValueConstraints] [With].
+SubType = [Visibility] "type" Ref Name [FormalTypePars] {ArrayDef} [ValueConstraints] [With].
 
-Struct = [Visibility] "type" StructKind Name
+Struct = [Visibility] "type" StructKind Name [FormalTypePars]
         "{"
            StructMember {[","|";"] StructMember} [","|";"]
 	"}" [With].
@@ -127,7 +127,7 @@ Destructor = "finally" Block.
 
 TestcaseType = [Visibility] "type" "testcase" Name FormalPars {ConfigSpec} [With].
 
-FunctionType = [Visibility] "type" "function" {modif} Name FormalPars {ConfigSpec} [ReturnSpec] [With].
+FunctionType = [Visibility] "type" "function" {modif} Name FormalPars {ConfigSpec} [Return] [With].
 
 AltstepType = [Visibility] "type" "altstep" {modif} ["interleave"] Name FormalPars {ConfigSpec} [With].
 
@@ -146,7 +146,7 @@ Template = [Visibility] "template" [ "(" TemplateRestriction ")"] {modif} Ref Na
 Testcase = [Visibility] "testcase" Name FormalPars {ConfigSpec} Block.
 
 // Function declaration
-Function = [Visibility] ["external"] "function" {modif} Name FormalPars {ConfigSpec} [ReturnSpec] [Exception] [Block] [With].
+Function = [Visibility] ["external"] "function" {modif} Name FormalPars {ConfigSpec} [Return] [Exception] [Block] [With].
 
 // Configuration declaration
 Config = [Visibility] "configuration" Name FormalPars {ConfigSpec} Block [With].
@@ -200,13 +200,15 @@ BasicBlock = "{" { Stmt [";"] } "}".
 // -----------
 //
 
+Exprs = Expr { "," Expr } "," .
+
 Expr = PrimaryExpr
      | Literal
      | UnaryExpr
      | BinaryExpr
      .
 
-PrimaryExpr = ID { "." ID | "[" Expr "]" | "(" Exprs ")" }.
+PrimaryExpr = id { "." id | "[" Expr "]" | "(" [Exprs] ")" }.
 
 Literal = int
         | float
@@ -273,7 +275,7 @@ Ref = id [TypePars]
     | "unmap"
     .
 
-TypePars = "<" TypePar { ","  Typepar } [","] ">" .
+TypePars = "<" TypePar { ","  TypePar } [","] ">" .
 
 TypePar = [ Name ":=" ] NestedType .
 
@@ -308,7 +310,7 @@ Refs = Ref { "," Ref } [","].
 
 Extends = "extends" Refs.
 Language = "language" string { "," string } [","].
-ReturnSpec = "return" [NestedTemplate] Ref {ArrayDef} .
+Return = "return" [NestedTemplate] Ref {ArrayDef} .
 
 ValueConstraints = "(" Expr { "," Expr } [","] ")".
 
