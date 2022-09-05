@@ -252,7 +252,7 @@ operand.
 in assignment notation.
 * <custom string>: tool specific output
 */
-external function any2unistr(in template any_type invalue, in universal charstring format := "") return universal charstring;
+external function any2unistr(in template any invalue, in universal charstring format := "") return universal charstring;
 
 /*
 The __lengthof__ function returns the length of a value or template that is of type __bitstring__, __hexstring__,
@@ -278,7 +278,7 @@ The __ispresent__ function is allowed for templates of all data types and return
 * the value __true__ if the data object reference fulfils the (present) template restriction as described in clause 15.8;
 * the value __false__ otherwise.
 */
-external function ispresent(in template any_ type inpar) return boolean;
+external function ispresent(in template any t) return boolean;
 
 /*
 The __ischosen__ function is allowed for templates of all data types that are a union-field-reference or a type alternative of an
@@ -287,7 +287,7 @@ anytype. This function returns:
 alternative of the anytype that is actually selected for the given data object;
 * in all other cases __false__.
 */
-external function ischosen(in template any_union_type_field inpar) return boolean;
+external function ischosen(in template any t) return boolean;
 
 /*
 The __isvalue__ function is allowed for templates of all data types, component and address types and default values. The function
@@ -297,7 +297,7 @@ inpar are set to omit. The function shall return __false__ otherwise.
 
 The __null__ value assigned to default and component references shall be considered as concrete values.
 */
-external function isvalue(in template any_type inpar) return boolean;
+external function isvalue(in template any inpar) return boolean;
 
 /*
 The __isbound__ function is allowed for templates of all data types. The function shall return __true__, if inpar is at least partially
@@ -307,7 +307,7 @@ otherwise. Inaccessible fields (e.g. non-selected alternatives of __union__ type
 or subfields of non-selected __union__ fields) shall be considered as uninitialized, i.e. __isbound__ shall return for them __false__.
 The __null__ value assigned to default and component references shall be considered as concrete values.
 */
-external function isbound(in template any_type inpar) return boolean;
+external function isbound(in template any inpar) return boolean;
 
 /*
 The __istemplatekind__ function allows to examine if a template contains a certain kind of the matching mechanisms.
@@ -342,7 +342,7 @@ In all other cases the function returns __false__.
 | "pattern" | Matching character pattern |
 
 */
-external function istemplatekind (in template any_type invalue, in charstring kind) return boolean;
+external function istemplatekind (in template any invalue, in charstring kind) return boolean;
 
 /*
 The __regexp__ function first matches the parameter inpar (or in case inpar is a template, its value equivalent) against the
