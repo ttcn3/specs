@@ -18,8 +18,9 @@ Decl = Altstep
      | AltstepType
      | Class
      | Component
-     | Config
+     | Configuration
      | Constructor
+     | Control
      | Destructor
      | Enum
      | Friend
@@ -123,6 +124,9 @@ Map = [Visibility] "type" "map" "from" Ref "to" Ref Name [With].
 Class = [Visibility] "type" ["external"] "class" {modif} Name [Extends] {ConfigSpec} "{" Decls "}" ["finally" Block] [With].
 
 Constructor = [Visibility] "create" FormalPars ["external" FormalPars] [":" Ref "(" [Exprs] ")" ] [Block] .
+
+Control = "control" Block.
+
 Destructor = "finally" Block.
 
 TestcaseType = [Visibility] "type" "testcase" Name FormalPars {ConfigSpec} [With].
@@ -149,7 +153,7 @@ Testcase = [Visibility] "testcase" Name FormalPars {ConfigSpec} Block.
 Function = [Visibility] ["external"] "function" {modif} Name FormalPars {ConfigSpec} [Return] [Exception] [Block] [With].
 
 // Configuration declaration
-Config = [Visibility] "configuration" Name FormalPars {ConfigSpec} Block [With].
+Configuration = [Visibility] "configuration" Name FormalPars {ConfigSpec} Block [With].
 
 // Altstep declaration
 Altstep = [Visibility] "altstep" {modif} ["interleave"] Name FormalPars {ConfigSpec} Block [With].
@@ -208,7 +212,7 @@ Expr = PrimaryExpr
      | BinaryExpr
      .
 
-PrimaryExpr = id { "." id | "[" Expr "]" | "(" [Exprs] ")" }.
+PrimaryExpr = Ref { "." Ref | "[" Expr "]" | "(" [Exprs] ")" }.
 
 Literal = int
         | float
@@ -217,6 +221,11 @@ Literal = int
 	| boolean
 	| verdict
 	| "-"
+	| "?"
+	| "*"
+	| "omit"
+	| "not_a_number"
+	| "null"
 	.
 
 UnaryExpr = "!" Expr
@@ -272,6 +281,7 @@ Ref = id [TypePars]
     | "system"
     | "this"
     | "timer"
+    | "universal" "charstring"
     | "unmap"
     .
 
