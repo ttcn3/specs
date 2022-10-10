@@ -10,9 +10,7 @@
 // --------------------------------------------
 //
 
-Module = "module" Name [Language] "{" Decls "}" [With] [";"].
-
-Decls = { Decl [";"] }.
+Module = "module" Name [Language] "{" { Decl ";" } "}" [With] ";".
 
 Decl = Altstep
      | AltstepType
@@ -40,18 +38,18 @@ Decl = Altstep
      | VarDecl
      .
 
-Group = [Visibility] "group" Name "{" Decls "}" [With].
+Group = [Visibility] "group" Name "{" { Decl ";" } "}" [With].
 
 Friend = [Visibility] "friend" "module" Refs [With].
 
 Import = [Visibility] "import" "from" Ref ["->" Name] ("all" [ExceptSpec] | ImportSpec) [With].
 
-ExceptSpec = "except" "{" { ExceptStmt [";"] } "}".
+ExceptSpec = "except" "{" { ExceptStmt ";" } "}".
 ExceptStmt = ImportKind (Refs|"all")
            | "group"    (Refs|"all")
            .
 
-ImportSpec = "{" { ImportStmt [";"] } "}".
+ImportSpec = "{" { ImportStmt ";" } "}".
 ImportStmt = ImportKind (Refs|"all" ["except" Refs])
            | "group"    {Ref [ExceptSpec]}
            .
@@ -75,7 +73,7 @@ Signature = [Visibility] "signature" Name [FormalTypePars] FormalPars [Return] [
 Component = [Visibility] "type" "component" Name [FormalTypePars][Extends] Block [With].
 
 // Port declaration
-Port = [Visibility] "type" "port" Name PortKind {PortSpec} "{" {PortAttribute [";"]} "}" [With].
+Port = [Visibility] "type" "port" Name PortKind {PortSpec} "{" {PortAttribute ";"} "}" [With].
 
 PortKind = "message"
          | "procedure"
@@ -90,7 +88,7 @@ PortSpec = "realtime"
 PortAttribute = "map"   "param" FormalPars
               | "unmap" "param" FormalPars
               | "address" Ref [PortTranslation]
-              | ("in"|"out"|"inout") PortElement {"," PortElement} [","]
+              | ("in"|"out"|"inout") {PortElement ","}
               .
 
 PortElement = Ref [PortTranslation].
@@ -98,32 +96,26 @@ PortTranslation =("from"|"to") Ref "with" Ref "(" ")".
 
 // User defined types
 
-SubType = [Visibility] "type" Ref Name [FormalTypePars] {ArrayDef} [ValueConstraints] [With].
+SubType = [Visibility] "type" Ref Name [FormalTypePars] {ArrayDef} ["(" Exprs ")"] [With].
 
-Struct = [Visibility] "type" StructKind Name [FormalTypePars]
-        "{"
-           StructMember {[","|";"] StructMember} [","|";"]
-	"}" [With].
+Struct = [Visibility] "type" StructKind Name [FormalTypePars] "{" { StructMember "," } "}" [With].
 
 StructKind = "record" | "set" | "union".
 
-StructMember = ["@default"] NestedType Name {ArrayDef} [ValueConstraints].
+StructMember = ["@default"] NestedType Name {ArrayDef} ["(" Exprs ")"].
 
 List = [Visibility] "type" ListKind ["length" "(" Expr ")"] "of" NestedType Name [With].
 ListKind = "record" | "set".
 
-Enum = [Visibility] "type" "enumerated" Name
-      "{"
-          EnumLabel {[","|";"] EnumLabel} [","|";"]
-      "}" [With].
+Enum = [Visibility] "type" "enumerated" Name "{" { EnumLabel "," } "}" [With].
 
-EnumLabel = Name ["(" Expr ")"].
+EnumLabel = Name ["(" Exprs ")"].
 
 Map = [Visibility] "type" "map" "from" Ref "to" Ref Name [With].
 
-Class = [Visibility] "type" ["external"] "class" {modifier} Name [Extends] {ConfigSpec} "{" Decls "}" ["finally" Block] [With].
+Class = [Visibility] "type" ["external"] "class" {modifier} Name [Extends] {ConfigSpec} "{" { Decl ";" } "}" ["finally" Block] [With].
 
-Constructor = [Visibility] "create" FormalPars ["external" FormalPars] [":" Ref "(" [Exprs] ")" ] [Block] .
+Constructor = [Visibility] "create" FormalPars ["external" FormalPars] [":" Ref "(" Exprs ")" ] [Block] .
 
 Control = "control" Block.
 
@@ -182,7 +174,7 @@ Stmt
     | WhileStmt
     .
 
-IfStmt     = "if" "(" [(AssignStmt|VarDecl) ";"] Expr ")" Block {"else" "if" "(" Expr ")"} ["else" Block].
+IfStmt     = "if" "(" [(AssignStmt|VarDecl) ";"] Expr ")" Block {"else" "if" "(" Expr ")" Block} ["else" Block].
 SelectStmt = "select" ["union"|"class"] "(" Expr ")" "{" { "case" ("else"|"(" Expr ")") Block } "}".
 ForStmt    = "for" "(" (AssignStmt|VarDecl) ("in" Ref|";" Expr";" AssignStmt) ")" Block.
 WhileStmt  = "while" "(" Expr ")" Block.
@@ -197,14 +189,14 @@ GuardStmt  = "[" [Expr] "]" Stmt.
 
 Block = BasicBlock ["catch" "(" Ref Name ")" BasicBlock] ["finally" BasicBlock].
 
-BasicBlock = "{" { Stmt [";"] } "}".
+BasicBlock = "{" { Stmt ";" } "}".
 
 //
 // Expressions
 // -----------
 //
 
-Exprs = Expr { "," Expr } "," .
+Exprs = {Expr "," }.
 
 Expr = PrimaryExpr
      | Literal
@@ -212,7 +204,7 @@ Expr = PrimaryExpr
      | BinaryExpr
      .
 
-PrimaryExpr = Ref { "." Ref | "[" Expr "]" | "(" [Exprs] ")" }.
+PrimaryExpr = Ref { "." Ref | "[" Expr "]" | "(" Exprs ")" }.
 
 Literal = integer
         | float
@@ -285,7 +277,7 @@ Ref = identifier [TypePars]
     | "unmap"
     .
 
-TypePars = "<" TypePar { ","  TypePar } [","] ">" .
+TypePars = "<" { TypePar "," } ">" .
 
 TypePar = [ Name ":=" ] NestedType .
 
@@ -294,7 +286,7 @@ TypePar = [ Name ":=" ] NestedType .
 // --------------------------------------
 //
 
-With = "with" "{" {WithStmt} "}".
+With = "with" "{" {WithStmt ";"} "}".
 
 WithStmt =  ("encode"|"variant"|"display"|"extension"|"optional") ["override"|"@local"] ["(" WithQualifier [","] ")"] string.
 
@@ -316,13 +308,12 @@ WithKind
     | "type"
     .
 
-Refs = Ref { "," Ref } [","].
+// Refs must not be empty
+Refs = {Ref ","} .
 
 Extends = "extends" Refs.
-Language = "language" string { "," string } [","].
+Language = "language" {string ","}.
 Return = "return" [NestedTemplate] Ref {ArrayDef} .
-
-ValueConstraints = "(" Expr { "," Expr } [","] ")".
 
 ConfigSpec
     = "runs" "on" Ref
@@ -366,9 +357,9 @@ NestedType
     | NestedEnum
     .
 
-NestedStruct = ("record"|"set"|"union") "{" StructMember {[","|";"] StructMember} [","|";"] "}".
+NestedStruct = ("record"|"set"|"union") "{" { StructMember "," } "}".
 NestedList = ("record"|"set") ["length" "(" Expr ")"] "of" NestedType.
-NestedEnum = "enumerated" "{" EnumLabel {[","|";"] EnumLabel} [","|";"] "}".
+NestedEnum = "enumerated" "{" {EnumLabel "," } "}".
 
  identifier = .
  modifier = .
