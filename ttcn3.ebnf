@@ -45,8 +45,8 @@ Friend = [Visibility] "friend" "module" Refs [With].
 Import = [Visibility] "import" "from" Ref ["->" Name] ("all" [ExceptSpec] | ImportSpec) [With].
 
 ExceptSpec = "except" "{" { ExceptStmt ";" } "}".
-ExceptStmt = ImportKind (Refs|"all")
-           | "group"    (Refs|"all")
+ExceptStmt = ImportKind Refs
+           | "group"    Refs
            .
 
 ImportSpec = "{" { ImportStmt ";" } "}".
@@ -344,8 +344,7 @@ TemplateRestriction = "omit" | "value" | "present".
 
 
 NestedTemplate
-    = "template"
-    | "template" "(" TemplateRestriction ")"
+    = "template" ["(" TemplateRestriction ")"]
     | TemplateRestriction
     .
 
