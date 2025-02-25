@@ -1,3 +1,5 @@
+**Update:** TTCN-3 standardization is [migrating to GitLab](https://labs.etsi.org/rep/mts/ttcn3/standard) and is working towards machine readability there. Therefore we archive this repository to improve centralization of TTCN-3 efforts.
+
 # Alternative TTCN-3 specifications (Experimental)
 
 This repository provides machine-readable specifications for TTCN-3. Its
